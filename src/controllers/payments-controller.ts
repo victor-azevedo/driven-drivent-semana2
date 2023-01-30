@@ -10,7 +10,7 @@ export async function postCreateOrUpdatePayment(req: AuthenticatedRequest, res: 
       userId: req.userId,
     });
 
-    return res.status(httpStatus.CREATED).send(newPayment);
+    return res.status(httpStatus.OK).send(newPayment);
   } catch (err) {
     return handleApplicationErrors(err, req, res);
   }

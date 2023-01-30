@@ -1,4 +1,4 @@
-import { notFoundError, unauthorizedError } from "@/errors";
+import { cannotEnrollBeforeStartDateError, notFoundError, unauthorizedError } from "@/errors";
 import paymentRepository, { CreateUpdatePaymentParams } from "@/repositories/payment-repository";
 import ticketRepository from "@/repositories/ticket-repository";
 import { exclude } from "@/utils/prisma-utils";
@@ -7,6 +7,10 @@ async function createOrUpdatePayment(params: CreateOrUpdatePaymentParams) {
   const { userId } = params;
   const { ticketId } = params;
   const { cardData } = params;
+
+  if (!ticketId || !cardData) {
+    throw cannotEnrollBeforeStartDateError();
+  }
   const cardLastDigits = cardData.number.toString().slice(-4);
 
   const ticket = await ticketRepository.findTicketById(ticketId);
@@ -19,8 +23,6 @@ async function createOrUpdatePayment(params: CreateOrUpdatePaymentParams) {
     throw unauthorizedError();
   }
 
-  const id = userTicket.Payment[0] ? userTicket.Payment[0].id : 0;
-
   const paymentData: CreateUpdatePaymentParams = {
     ticketId: userTicket.id,
     value: userTicket.TicketType.price,
@@ -28,7 +30,7 @@ async function createOrUpdatePayment(params: CreateOrUpdatePaymentParams) {
     cardLastDigits,
   };
 
-  const newPayment = paymentRepository.upsert(id, paymentData);
+  const newPayment = paymentRepository.createPayment(paymentData);
 
   if (newPayment) {
     await ticketRepository.updateTicketStatus(ticketId, "PAID");
