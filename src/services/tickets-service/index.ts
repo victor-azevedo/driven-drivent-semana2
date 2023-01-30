@@ -1,3 +1,4 @@
+import { notFoundError } from "@/errors";
 import enrollmentRepository from "@/repositories/enrollment-repository";
 import ticketRepository, { CreateTicketParams, UpdateTicketParams } from "@/repositories/ticket-repository";
 import { exclude } from "@/utils/prisma-utils";
@@ -8,6 +9,11 @@ async function createOrUpdateTicket(params: CreateOrUpdateTicket) {
   const status = "RESERVED";
 
   const enrollmentIdTicketsId = await enrollmentRepository.findUserEnrollmentIdAndTicketsId(params.userId);
+
+  if (!enrollmentIdTicketsId.enrollmentId) {
+    throw notFoundError();
+  }
+
   const { enrollmentId, ticketsId } = enrollmentIdTicketsId;
   const id = ticketsId;
 
@@ -25,7 +31,11 @@ async function findTicketsTypes() {
 async function findUserTicket(userId: number) {
   const userTicket = await ticketRepository.findUserTicket(userId);
 
-  return exclude(userTicket, "Payment");
+  if (!userTicket) {
+    throw notFoundError();
+  }
+
+  return exclude(userTicket, "Payment", "Enrollment");
 }
 
 export type CreateOrUpdateTicket = Pick<Ticket, "ticketTypeId"> & { userId: number };
