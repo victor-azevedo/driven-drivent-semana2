@@ -13,4 +13,9 @@ export const createPaymentSchema = Joi.object<CreatePayment>({
   }).required(),
 });
 
+export const queryPaymentSchema = Joi.object<QueryPayment>({
+  ticketId: Joi.number().required(),
+});
+
 type CreatePayment = Pick<Payment, "ticketId" & { cardData: CardData }>;
+type QueryPayment = Pick<Payment, "ticketId">;
