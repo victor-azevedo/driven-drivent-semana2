@@ -5,14 +5,14 @@ async function findTicketsTypes(): Promise<TicketType[]> {
   return prisma.ticketType.findMany();
 }
 
-async function findUserTicket(userId: number): Promise<Ticket & { TicketType: TicketType }> {
+async function findUserTicket(userId: number) {
   return prisma.ticket.findFirst({
     where: {
       Enrollment: {
         userId: { equals: userId },
       },
     },
-    include: { TicketType: true },
+    include: { TicketType: true, Payment: true },
   });
 }
 
