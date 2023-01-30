@@ -1,5 +1,6 @@
 import enrollmentRepository from "@/repositories/enrollment-repository";
 import ticketRepository, { CreateTicketParams, UpdateTicketParams } from "@/repositories/ticket-repository";
+import { exclude } from "@/utils/prisma-utils";
 import { Ticket } from "@prisma/client";
 
 async function createOrUpdateTicket(params: CreateOrUpdateTicket) {
@@ -24,7 +25,7 @@ async function findTicketsTypes() {
 async function findUserTicket(userId: number) {
   const userTicket = await ticketRepository.findUserTicket(userId);
 
-  return userTicket;
+  return exclude(userTicket, "Payment");
 }
 
 export type CreateOrUpdateTicket = Pick<Ticket, "ticketTypeId"> & { userId: number };
