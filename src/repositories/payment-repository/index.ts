@@ -11,10 +11,24 @@ async function upsert(id: number, createdUpdatePayment: CreateUpdatePaymentParam
   });
 }
 
+async function findTicketPayment(ticketId: number) {
+  return prisma.payment.findFirst({
+    where: {
+      ticketId,
+    },
+    include: {
+      Ticket: {
+        select: { Enrollment: { select: { userId: true } } },
+      },
+    },
+  });
+}
+
 export type CreateUpdatePaymentParams = Omit<Payment, "id" | "createdAt" | "updatedAt">;
 
 const paymentRepository = {
   upsert,
+  findTicketPayment,
 };
 
 export default paymentRepository;
