@@ -1,4 +1,4 @@
-import { AuthenticatedRequest } from "@/middlewares";
+import { AuthenticatedRequest, handleApplicationErrors } from "@/middlewares";
 import paymentsService, { CreateOrUpdatePaymentBody } from "@/services/payments-service";
 import { Response } from "express";
 import httpStatus from "http-status";
@@ -11,8 +11,8 @@ export async function postCreateOrUpdatePayment(req: AuthenticatedRequest, res: 
     });
 
     return res.status(httpStatus.CREATED).send(newPayment);
-  } catch (error) {
-    return res.sendStatus(httpStatus.BAD_REQUEST);
+  } catch (err) {
+    return handleApplicationErrors(err, req, res);
   }
 }
 
@@ -25,7 +25,7 @@ export async function getUserPayment(req: AuthenticatedRequest, res: Response) {
     });
 
     return res.status(httpStatus.OK).send(ticketPayment);
-  } catch (error) {
-    return res.sendStatus(httpStatus.BAD_REQUEST);
+  } catch (err) {
+    return handleApplicationErrors(err, req, res);
   }
 }

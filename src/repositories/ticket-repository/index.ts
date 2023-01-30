@@ -16,6 +16,16 @@ async function findUserTicket(userId: number) {
   });
 }
 
+async function findTicketById(id: number) {
+  return prisma.ticket.findFirst({
+    where: {
+      id: {
+        equals: id,
+      },
+    },
+  });
+}
+
 async function upsert(
   id: number,
   createdTicket: CreateTicketParams,
@@ -46,6 +56,7 @@ export type UpdateTicketParams = Omit<CreateTicketParams, "enrollmentId">;
 const ticketRepository = {
   findTicketsTypes,
   findUserTicket,
+  findTicketById,
   upsert,
   updateTicketStatus,
 };
