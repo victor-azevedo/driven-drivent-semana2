@@ -11,6 +11,12 @@ async function upsert(id: number, createdUpdatePayment: CreateUpdatePaymentParam
   });
 }
 
+async function createPayment(createdUpdatePayment: CreateUpdatePaymentParams): Promise<Payment> {
+  return prisma.payment.create({
+    data: createdUpdatePayment,
+  });
+}
+
 async function findTicketPayment(ticketId: number) {
   return prisma.payment.findFirst({
     where: {
@@ -29,6 +35,7 @@ export type CreateUpdatePaymentParams = Omit<Payment, "id" | "createdAt" | "upda
 const paymentRepository = {
   upsert,
   findTicketPayment,
+  createPayment,
 };
 
 export default paymentRepository;

@@ -1,16 +1,27 @@
-import { unauthorizedError } from "@/errors";
+import { cannotEnrollBeforeStartDateError, notFoundError, unauthorizedError } from "@/errors";
 import paymentRepository, { CreateUpdatePaymentParams } from "@/repositories/payment-repository";
 import ticketRepository from "@/repositories/ticket-repository";
 import { exclude } from "@/utils/prisma-utils";
 
 async function createOrUpdatePayment(params: CreateOrUpdatePaymentParams) {
   const { userId } = params;
+  const { ticketId } = params;
   const { cardData } = params;
+
+  if (!ticketId || !cardData) {
+    throw cannotEnrollBeforeStartDateError();
+  }
   const cardLastDigits = cardData.number.toString().slice(-4);
 
-  const userTicket = await ticketRepository.findUserTicket(userId);
+  const ticket = await ticketRepository.findTicketById(ticketId);
+  if (!ticket) {
+    throw notFoundError();
+  }
 
-  const id = userTicket.Payment[0] ? userTicket.Payment[0].id : 0;
+  const userTicket = await ticketRepository.findUserTicket(userId);
+  if (!userTicket) {
+    throw unauthorizedError();
+  }
 
   const paymentData: CreateUpdatePaymentParams = {
     ticketId: userTicket.id,
@@ -19,18 +30,30 @@ async function createOrUpdatePayment(params: CreateOrUpdatePaymentParams) {
     cardLastDigits,
   };
 
-  return paymentRepository.upsert(id, paymentData);
+  const newPayment = paymentRepository.createPayment(paymentData);
+
+  if (newPayment) {
+    await ticketRepository.updateTicketStatus(ticketId, "PAID");
+  }
+
+  return newPayment;
 }
 
 async function findUserTicketPayment(params: FindTicketPaymentParams) {
   const { userId } = params;
   const { ticketId } = params;
 
-  const ticketPayment = await paymentRepository.findTicketPayment(ticketId);
+  const ticket = await ticketRepository.findTicketById(ticketId);
+  if (!ticket) {
+    throw notFoundError();
+  }
 
-  if (ticketPayment.Ticket.Enrollment.userId !== userId) {
+  const userTicket = await ticketRepository.findUserTicket(userId);
+  if (!userTicket) {
     throw unauthorizedError();
   }
+
+  const ticketPayment = await paymentRepository.findTicketPayment(ticketId);
   return exclude(ticketPayment, "Ticket");
 }
 
