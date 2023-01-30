@@ -1,5 +1,7 @@
+import { unauthorizedError } from "@/errors";
 import paymentRepository, { CreateUpdatePaymentParams } from "@/repositories/payment-repository";
 import ticketRepository from "@/repositories/ticket-repository";
+import { exclude } from "@/utils/prisma-utils";
 
 async function createOrUpdatePayment(params: CreateOrUpdatePaymentParams) {
   const { userId } = params;
@@ -20,6 +22,18 @@ async function createOrUpdatePayment(params: CreateOrUpdatePaymentParams) {
   return paymentRepository.upsert(id, paymentData);
 }
 
+async function findUserTicketPayment(params: FindTicketPaymentParams) {
+  const { userId } = params;
+  const { ticketId } = params;
+
+  const ticketPayment = await paymentRepository.findTicketPayment(ticketId);
+
+  if (ticketPayment.Ticket.Enrollment.userId !== userId) {
+    throw unauthorizedError();
+  }
+  return exclude(ticketPayment, "Ticket");
+}
+
 export type CreateOrUpdatePaymentBody = {
   ticketId: number;
   cardData: {
@@ -32,9 +46,11 @@ export type CreateOrUpdatePaymentBody = {
 };
 
 type CreateOrUpdatePaymentParams = Required<CreateOrUpdatePaymentBody> & { userId: number };
+type FindTicketPaymentParams = { ticketId: number; userId: number };
 
 const paymentsService = {
   createOrUpdatePayment,
+  findUserTicketPayment,
 };
 
 export default paymentsService;

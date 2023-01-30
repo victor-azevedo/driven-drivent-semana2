@@ -15,3 +15,17 @@ export async function postCreateOrUpdatePayment(req: AuthenticatedRequest, res: 
     return res.sendStatus(httpStatus.BAD_REQUEST);
   }
 }
+
+export async function getUserPayment(req: AuthenticatedRequest, res: Response) {
+  const ticketId = req.query.ticketId as string;
+  try {
+    const ticketPayment = await paymentsService.findUserTicketPayment({
+      ticketId: parseInt(ticketId),
+      userId: req.userId,
+    });
+
+    return res.status(httpStatus.OK).send(ticketPayment);
+  } catch (error) {
+    return res.sendStatus(httpStatus.BAD_REQUEST);
+  }
+}
